@@ -1,0 +1,58 @@
+import "./global.css";
+
+import { Toaster } from "@/components/ui/toaster";
+import { createRoot } from "react-dom/client";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import PlaceholderPage from "./components/PlaceholderPage";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route
+            path="/inizia"
+            element={
+              <PlaceholderPage
+                title="Iniziamo"
+                description="Il flusso di configurazione degli occhiali AR arriverà presto. Continua a chattare con Fusion per generarlo."
+              />
+            }
+          />
+          <Route
+            path="/lingua"
+            element={
+              <PlaceholderPage
+                title="Lingua"
+                description="La selezione della lingua per le trascrizioni arriverà presto."
+              />
+            }
+          />
+          <Route
+            path="/accessibilita"
+            element={
+              <PlaceholderPage
+                title="Accessibilità"
+                description="Le impostazioni di accessibilità arriveranno presto."
+              />
+            }
+          />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+createRoot(document.getElementById("root")!).render(<App />);
