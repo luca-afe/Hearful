@@ -57,7 +57,7 @@ export default function Home() {
                         Subtitled.
                     </h1>
                     <p className="text-gray-300 text-sm max-w-[280px] font-light">
-                        Ascolta ogni attimo visualizzando trascrizioni in tempo reale di ciò che ti circonda, direttamente sui tuoi occhiali AR.
+                        Ascolta pippo luigi ogni attimo visualizzando trascrizioni in tempo reale di ciò che ti circonda, direttamente sui tuoi occhiali AR.
                     </p>
                 </div>
 
