@@ -52,7 +52,7 @@ export default function Home() {
 
                 {/* Testo descrittivo */}
                 <div className="mb-10 w-full mt-4">
-                    <h1 className="text-5xl font-semibold leading-tight mb-4 tracking-tight">
+                    <h1 className="text-5xl leading-tight mb-4 tracking-tight">
                         Life,<br />
                         Subtitled.
                     </h1>
@@ -64,19 +64,40 @@ export default function Home() {
                 {/* Pulsanti */}
                 <div className="space-y-4 w-full">
                     <button
-                        className="w-full py-4 rounded-full text-white font-medium text-lg leading-none shadow-[0_0_20px_rgba(0,153,255,0.4)] hover:brightness-110 active:scale-95 transition-all"
+                        className="w-full py-2 rounded-full text-white font-medium text-lg leading-none hover:brightness-110 active:scale-95 transition-all"
                         style={{
-                            background: 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 40%)'
+                            background: 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 40%)',
+                            fontFamily: 'Inter',
+                            fontSize: '24px',
+                            fontWeight: '300',
+                            borderRadius: '20px',
+                            height: '50px',
                         }}
                     >
                         Inizia
                     </button>
 
                     <div className="flex space-x-4">
-                        <button className="flex-1 py-3.5 rounded-full border border-gray-400/50 text-white text-sm font-medium hover:bg-white/10 active:bg-white/20 transition-all">
+                        <button className="flex-1 py-2.5 rounded-full border border-gray-400/50 text-white text-sm font-medium hover:bg-white/10 active:bg-white/20 transition-all"
+                            style={{
+                                fontFamily: 'Inter',
+                                fontSize: '15px',
+                                fontWeight: '300',
+                                borderRadius: '20px',
+                                height: '50px',
+                            }}
+                        >
                             Lingua
                         </button>
-                        <button className="flex-1 py-3.5 rounded-full border border-gray-400/50 text-white text-sm font-medium hover:bg-white/10 active:bg-white/20 transition-all">
+                        <button className="flex-1 py-2.5 rounded-full border border-gray-400/50 text-white text-sm font-medium hover:bg-white/10 active:bg-white/20 transition-all"
+                            style={{
+                                fontFamily: 'Inter',
+                                fontSize: '15px',
+                                fontWeight: '300',
+                                borderRadius: '20px',
+                                height: '50px',
+                            }}
+                        >
                             Accessibilità
                         </button>
                     </div>
