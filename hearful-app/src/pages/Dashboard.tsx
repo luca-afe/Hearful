@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park } from 'lucide-react';
+import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park, BatteryCharging, BatteryWarning, Battery, CircleQuestionMark } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import bgImage from '../assets/bg-dashboard.png';
 import glassesImg from '../assets/glasses-dash.png';
@@ -67,10 +67,10 @@ export default function Dashboard() {
 
             {/* Hero Section (Stato + Occhiali + Titolo) */}
             <div className="flex flex-col items-center pt-2 pb-6 text-white relative">
-                <div className="flex items-center space-x-1.5 mb-2">
-                    <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${isOffline ? 'bg-red-500 text-red-500' : 'bg-green-500 text-green-500 animate-pulse'}`} />
+                <div className="flex items-center space-x-1.5 mb-10">
+                    <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${isOffline ? 'bg-red-500 text-red-500 animate-pulse' : 'bg-green-500 text-green-500 animate-pulse'}`} />
                     <span className={`text-[10px] font-semibold uppercase tracking-wider ${isOffline ? 'text-red-400' : 'text-white'}`}>
-                        {isOffline ? 'Offline' : 'Connesso'}
+                        {isOffline ? 'Non connesso' : 'Connesso'}
                     </span>
                 </div>
 
@@ -83,10 +83,10 @@ export default function Dashboard() {
 
                 <h1 className="text-[32px] font-semibold tracking-tight leading-tight mb-2">XRAI Glass</h1>
                 <div className="flex items-center space-x-2 text-sm text-gray-200">
-                    <BatteryFull className="w-5 h-5 text-white" />
-                    <span className="font-medium text-[13px]">100%</span>
+                    {isOffline ? <Battery className="w-5 h-5 text-white" /> : <BatteryFull className="w-5 h-5 text-white" />}
+                    <span className="font-medium text-[13px]">{isOffline ? <CircleQuestionMark size={16} /> : "100%"}</span>
                 </div>
-                <span className="text-[11px] font-medium tracking-wide mt-1 text-gray-400 mb-10">AAC</span>
+                <span className="text-[11px] font-medium tracking-wide mt-1 text-gray-400 mb-10">{isOffline ? "OFFLINE" : "AAC"}</span>
             </div>
 
             {/* Main Controls Area */}
@@ -139,10 +139,10 @@ export default function Dashboard() {
 
                     <div className="flex items-center space-x-3">
                         <span className="text-xs font-bold text-gray-300">A</span>
-                        {/* Slider Custom (Ricalca il design, ora interattivo) */}
+                        {/* Slider Custom */}
                         <div className="flex-1 relative h-6 flex items-center">
                             <div className="absolute left-0 right-0 h-1.5 bg-[#404040] rounded-full pointer-events-none" />
-                            <div className="absolute left-0 h-1.5 bg-[#0095FF] rounded-full pointer-events-none" style={{ width: `${subSize}%` }} />
+                            <div className={`absolute left-0 h-1.5 ${isOffline ? 'bg-[#5b5b5b]' : 'bg-[#0095FF]'} rounded-full pointer-events-none`} style={{ width: `${subSize}%` }} />
 
                             <input
                                 type="range"
@@ -162,11 +162,14 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Pulsante Funzionalità AR (Statico/View-only come richiesto) */}
+                {/* Pulsante Funzionalità AR */}
                 <div
-                    className="w-full py-4 rounded-[16px] text-white font-medium text-[15px] shadow-[0_0_20px_rgba(0,153,255,0.4)] text-center tracking-wide"
+                    className={`w-full py-4 rounded-[16px] text-white font-medium text-[15px] text-center tracking-wide transition-all duration-500 ${isOffline ? 'shadow-none text-gray-300' : 'shadow-[0_0_20px_rgba(0,153,255,0.4)]'
+                        }`}
                     style={{
-                        background: 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 30%)'
+                        background: isOffline
+                            ? 'radial-gradient(circle at center bottom, rgb(156 163 175) 0%, rgb(75 85 99) 50%)'
+                            : 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 30%)'
                     }}
                 >
                     Funzionalità AR
@@ -204,8 +207,8 @@ export default function Dashboard() {
                 </div>
             </main>
 
-            {/* Renderizzo la Navbar fluttuante */}
-            <BottomNav />
+            {/* Navbar fluttuante */}
+            <BottomNav isOffline={isOffline} />
 
             {/* Overlay Dimensione Font in Tempo Reale */}
             <div className={`fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-700 ease-out ${showOverlay ? 'opacity-100' : 'opacity-0'
@@ -221,7 +224,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Global Offline Overlay (blur morbido e animato tramite opacità) */}
+            {/* Global Offline Overlay */}
             <div
                 className={`fixed inset-0 z-30 bg-black/20 transition-all duration-700 ease-out ${isOffline ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                     }`}
