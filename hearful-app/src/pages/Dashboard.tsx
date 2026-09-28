@@ -176,7 +176,7 @@ export default function Dashboard() {
                                 transformOrigin: '30% 48%',
                                 transform: activeView === 'dashboard' ? 'scale(1) translateY(0) translateX(0)' : 'scale(1.8) translateY(-1.5rem) translateX(2.5rem)'
                             }}
-                            className="w-full object-contain drop-shadow-2xl transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+                            className="w-full object-contain drop-shadow-[5px_10px_10px_rgb(0,0,0,0.40)] transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
                         />
 
                         {/* Overlay Lenti Occhiali - Visibile in CC */}
@@ -195,7 +195,7 @@ export default function Dashboard() {
                             </div>
 
                             {/* Primo interlocutore (Alto a Sx lente sx) */}
-                            <div className="w-[40%] h-[55%] flex flex-col justify-end items-start overflow-hidden origin-center transition-all duration-1000" style={{ transform: activeView === 'cc' ? 'translateX(-11.5rem) translateY(-6rem)' : 'translateX(0)' }}>
+                            <div className="w-[40%] h-[55%] flex flex-col justify-end items-start overflow-hidden origin-center transition-all duration-1000" style={{ transform: activeView === 'cc' ? 'translateX(-7.5rem) translateY(-7rem)' : 'translateX(0)' }}>
                                 {captions.map((cap, i) => cap.name === 'Luca' && (
                                     <TypewriterText key={'1st-' + cap.id + i} orig={cap.orig} trans={cap.trans} render={(_o, t) => (
                                         <div className="mb-2 text-left w-full opacity-80" style={{ animation: 'fadeInPlace 0.4s ease-out forwards' }}>
@@ -356,7 +356,7 @@ export default function Dashboard() {
                                     <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-500">In Ascolto</span>
                                 </div>
                             ) : (
-                                <span className="text-sm">Premi play per iniziare</span>
+                                <span className="text-sm">Premi play per avviare la trascrizione</span>
                             )}
                         </div>
 
