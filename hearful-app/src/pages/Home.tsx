@@ -1,9 +1,16 @@
+import { useNavigate, Link } from 'react-router-dom';
 import bgImage from '../assets/bg-home.png';
 import occhialiVideo from '../assets/ARglasses1.mp4';
+import { motion } from 'framer-motion';
+
 export default function Home() {
     return (
-        <div
-            className="min-h-screen bg-cover bg-center flex flex-col text-white font-sans overflow-hidden bg-gradient-to-tr from-[#020B1A] via-[#103487] to-[#4EB0DB]"
+        <motion.div
+            initial={{ y: '-100%', zIndex: 100 }}
+            animate={{ y: 0, zIndex: 100 }}
+            exit={{ y: '20%', opacity: 0, zIndex: 10 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+            className="absolute inset-0 min-h-screen bg-cover bg-center flex flex-col text-white font-sans overflow-hidden bg-gradient-to-tr from-[#020B1A] via-[#103487] to-[#4EB0DB]"
             style={{ backgroundImage: `url(${bgImage})` }}
         >
             {/* Top Bar */}
@@ -103,6 +110,6 @@ export default function Home() {
                     </div>
                 </div>
             </main>
-        </div>
+        </motion.div>
     );
 }

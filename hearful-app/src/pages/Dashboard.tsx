@@ -3,7 +3,8 @@ import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park, Play,
 import BottomNav from '../components/BottomNav';
 import bgImage from '../assets/bg-dashboard.png';
 import glassesImg from '../assets/glasses-dash.png';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 function TypewriterText({ orig, trans, render }: { orig: string, trans: string, render: (o: string, t: string) => React.ReactNode }) {
     const [displayedOrig, setDisplayedOrig] = useState('');
@@ -106,13 +107,17 @@ export default function Dashboard() {
     };
 
     return (
-        <div
-            className="min-h-screen bg-cover bg-center flex flex-col font-sans overflow-y-auto overflow-x-hidden bg-gradient-to-br from-[#02184B] to-[#010D27]"
+        <motion.div
+            initial={{ y: '-100%', zIndex: 100 }}
+            animate={{ y: 0, zIndex: 100 }}
+            exit={{ y: '20%', opacity: 0, zIndex: 10 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+            className="absolute inset-0 min-h-screen bg-cover bg-center flex flex-col font-sans overflow-y-auto overflow-x-hidden bg-gradient-to-br from-[#02184B] to-[#010D27]"
             style={{ backgroundImage: `url(${bgImage})` }}
         >
             {/* Top Bar */}
             <header className="-mt-4 flex items-center justify-between px-6 pt-12 pb-2 text-white relative z-[60]">
-                <div className="flex items-center relative z-50 transition-all duration-700">
+                <Link to="/" className="flex items-center relative z-50 transition-all duration-700 hover:opacity-80 active:scale-95 cursor-pointer">
                     {/* Logo Hearful SVG compatto */}
                     <svg width="29" height="31" viewBox="0 0 45 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2" strokeWidth={2}>
                         <g filter="url(#filter0_d_539_444)">
@@ -122,7 +127,7 @@ export default function Dashboard() {
                         </g>
                     </svg>
                     <span className="text-[20px] font-light tracking-small -ml-1">Hearful</span>
-                </div>
+                </Link>
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={handlePowerClick}
@@ -421,7 +426,7 @@ export default function Dashboard() {
 
             {/* Global Offline Overlay */}
             <div
-                className={`fixed inset-0 z-[55] bg-black/20 transition-all duration-700 ease-out ${isOffline ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 z-[55] bg-black/20 transition-all duration-700 ease-out ${isOffline ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none'
                     }`}
             />
 
@@ -448,6 +453,6 @@ export default function Dashboard() {
                     </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
