@@ -3,8 +3,11 @@ import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park, Play,
 import BottomNav from '../components/BottomNav';
 import bgImage from '../assets/bg-dashboard.png';
 import glassesImg from '../assets/glasses-dash.png';
+import lisVideo from '../assets/LISimulation.mp4';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+
+const SvgMaskUri = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg width="380" height="211" viewBox="0 0 380 211" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.2247 44.3321L9.1623 42.6337C3.67748 38.1167 0.5 31.3837 0.5 24.2784C0.5 11.1459 11.146 0.5 24.2784 0.5H32.5H70.5H99.5H146H187.5H226.5H265H298H307.884C316.441 0.5 324.166 5.62005 327.5 13.5L333.106 28.9997C335.02 34.2918 337.877 39.2343 341.496 43.5434C344.795 47.4708 348.732 50.8638 353.108 53.5384L361.69 58.7825C363.527 59.9057 365.64 60.5 367.794 60.5H374C377.038 60.5 379.5 62.9624 379.5 66C379.5 69.0376 377.038 71.5 374 71.5H365.044C362.086 71.5 359.199 72.4076 356.773 74.1002L348.063 80.1769C342.098 84.3384 337.152 89.7948 333.593 96.138L330.937 100.874C328.651 104.948 326.768 109.236 325.313 113.675L318 136L311.565 157.576C310.192 162.181 308.379 166.644 306.153 170.903L305.917 171.355C300.709 181.317 293.27 189.94 284.18 196.551C271.714 205.617 256.698 210.5 241.285 210.5H226.5H187.5H146L117.883 207.779C105.764 206.606 94.0297 202.888 83.4472 196.866L81.8748 195.972C74.347 191.689 67.607 186.15 61.9461 179.595C55.0574 171.619 49.9036 162.297 46.8122 152.221L38 123.5L34.3039 101.995C33.1036 95.0116 31.3016 88.1445 28.9182 81.471L20.2342 57.1558C18.4449 52.1457 15.3314 47.7141 11.2247 44.3321Z" fill="black"/></svg>`)}`;
+import { motion, AnimatePresence } from 'framer-motion';
 
 function TypewriterText({ orig, trans, render }: { orig: string, trans: string, render: (o: string, t: string) => React.ReactNode }) {
     const [displayedOrig, setDisplayedOrig] = useState('');
@@ -24,7 +27,7 @@ function TypewriterText({ orig, trans, render }: { orig: string, trans: string, 
                 let delay = speed;
                 const charOrig = orig[i] || '';
                 const charTrans = trans[i] || '';
-                if ([',', '.', '!', '?'].includes(charOrig) || [',', '.', '!', '?'].includes(charTrans)) {
+                if ([',', '.', '!', '?', '‎'].includes(charOrig) || [',', '.', '!', '?'].includes(charTrans)) {
                     delay = speed * 15;
                 }
 
@@ -47,11 +50,19 @@ export default function Dashboard() {
     const [showOverlay, setShowOverlay] = useState(false);
     const [isPowerConfirmOpen, setIsPowerConfirmOpen] = useState(false);
     const [isOffline, setIsOffline] = useState(false);
-    const [activeView, setActiveView] = useState<'dashboard' | 'cc'>('dashboard');
+    const [activeView, setActiveView] = useState<'dashboard' | 'cc' | 'lis'>('dashboard');
 
     // Captioning specific states
-    const [isListening, setIsListening] = useState(false);
-    const [captions, setCaptions] = useState<{ id: string, name: string, orig: string, trans: string, color: string, time?: string }[]>([]);
+    const [isListeningCC, setIsListeningCC] = useState(false);
+    const [isListeningLIS, setIsListeningLIS] = useState(false);
+    const isListening = activeView === 'lis' ? isListeningLIS : isListeningCC;
+
+    const [captionsCC, setCaptionsCC] = useState<{ id: string, name: string, orig: string, trans?: string, color: string, time?: string }[]>([]);
+    const [captionsLIS, setCaptionsLIS] = useState<{ id: string, name: string, orig: string, trans?: string, color: string, time?: string }[]>([]);
+    const captions = activeView === 'lis' ? captionsLIS : captionsCC;
+
+    // Video Ref for LIS Manual Playback
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const [toggles, setToggles] = useState({
         parlato: false,
@@ -60,9 +71,9 @@ export default function Dashboard() {
         registra: false
     });
 
-    // Simulate incoming captions
+    // Simulate incoming CC captions
     useEffect(() => {
-        if (!isListening) return;
+        if (!isListeningCC) return;
 
         const sequence = [
             { id: '1', name: 'Luca', orig: 'Hello, my name’s Luca. I am really happy to meet you!', trans: 'Ciao, il mio nome è Luca. Sono contento di conoscerti!', color: '#0095FF', delay: 3500 },
@@ -73,19 +84,62 @@ export default function Dashboard() {
         const timeouts = sequence.map(msg =>
             setTimeout(() => {
                 const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                setCaptions(prev => [...prev, { ...msg, time: timeStr }]);
+                setCaptionsCC(prev => [...prev, { ...msg, time: timeStr }]);
             }, msg.delay)
         );
 
         return () => timeouts.forEach(clearTimeout);
-    }, [isListening]);
+    }, [isListeningCC]);
+
+    // Simulate incoming LIS captions
+    useEffect(() => {
+        if (!isListeningLIS) {
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+            return;
+        }
+
+        const sequence = [
+            { id: '1', name: 'Speaker', orig: 'Ciao, sto comunicando tramite LIS!‎‎   Scambiamoci due chiacchiere', color: '#0095FF', delay: 4200 },
+        ];
+
+        const timeouts = sequence.map(msg =>
+            setTimeout(() => {
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                setCaptionsLIS(prev => [...prev, { ...msg, time: timeStr }]);
+            }, msg.delay)
+        );
+
+        // Start video playback after a physical 3s delay
+        const videoTimeout = setTimeout(() => {
+            if (videoRef.current) {
+                videoRef.current.play().catch(e => console.log('Video autoplay interrupted:', e));
+            }
+        }, 3000);
+
+        return () => {
+            timeouts.forEach(clearTimeout);
+            clearTimeout(videoTimeout);
+        };
+    }, [isListeningLIS]);
 
     const handlePlayStop = () => {
-        if (isListening) {
-            setIsListening(false);
-            setCaptions([]); // Reset upon stop for the prototype
+        if (activeView === 'lis') {
+            if (isListeningLIS) {
+                setIsListeningLIS(false);
+                setCaptionsLIS([]);
+            } else {
+                setIsListeningLIS(true);
+            }
         } else {
-            setIsListening(true);
+            if (isListeningCC) {
+                setIsListeningCC(false);
+                setCaptionsCC([]);
+            } else {
+                setIsListeningCC(true);
+            }
         }
     };
 
@@ -96,7 +150,10 @@ export default function Dashboard() {
             setIsOffline(true); // Spegne
             setIsPowerConfirmOpen(false);
             setActiveView('dashboard'); // Torna alla dashboard
-            setIsListening(false); // Stoppa la trascrizione
+            setIsListeningCC(false);
+            setIsListeningLIS(false);
+            setCaptionsCC([]);
+            setCaptionsLIS([]);
         } else {
             setIsPowerConfirmOpen(true); // Mostra avviso
         }
@@ -144,10 +201,10 @@ export default function Dashboard() {
             </header>
 
             {/* Hero Section (Stato + Occhiali + Titolo) */}
-            <div className={`flex flex-col items-center pt-2 pb-6 text-white relative z-50 transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${activeView === 'cc' ? 'translate-y-8' : 'translate-y-0'}`}>
+            <div className={`flex flex-col items-center pt-2 pb-6 text-white relative z-50 transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${(activeView === 'cc' || activeView === 'lis') ? 'translate-y-8' : 'translate-y-0'}`}>
 
                 {/* Indicatore Stato Dashboard */}
-                <div className={`flex items-center space-x-1.5 mb-10 transition-all duration-300 ${activeView === 'cc' ? 'opacity-0 scale-90 absolute top-2' : 'opacity-100 scale-100 relative'}`}>
+                <div className={`flex items-center space-x-1.5 mb-10 transition-all duration-300 ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-0 scale-90 absolute top-2' : 'opacity-100 scale-100 relative'}`}>
                     <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${isOffline ? 'bg-red-500 text-red-500 animate-pulse' : 'bg-green-500 text-green-500 animate-pulse'}`} />
                     <span className={`text-[10px] font-semibold uppercase tracking-wider ${isOffline ? 'text-red-400' : 'text-white'}`}>
                         {isOffline ? 'Non connesso' : 'Connesso'}
@@ -155,40 +212,90 @@ export default function Dashboard() {
                 </div>
 
                 {/* Indicatore Stato Live Captioning */}
-                <div className={`flex flex-col items-center space-y-1 transition-all absolute top-2 ${activeView === 'cc' ? 'opacity-100 scale-100 translate-y-0 duration-[800ms]' : 'opacity-0 scale-90 -translate-y-4 pointer-events-none duration-150'}`}>
+                <div className={`flex flex-col items-center space-y-1 transition-all absolute top-2 ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-100 scale-100 translate-y-0 duration-[800ms]' : 'opacity-0 scale-90 -translate-y-4 pointer-events-none duration-150'}`}>
                     <div className="flex items-center space-x-2 -mt-3">
-                        <AudioLines className={`w-5 h-5 text-red-500 ${isListening ? 'animate-pulse' : ''}`} />
-                        <span className="text-[10px] font-bold tracking-small text-white">LIVE CAPTIONING</span>
+                        {activeView === 'lis' ? (
+                            <div className={`w-2.5 h-2.5 rounded-full bg-red-500 ${isListening ? 'animate-pulse' : ''}`} />
+                        ) : (
+                            <AudioLines className={`w-5 h-5 text-red-500 ${isListening ? 'animate-pulse' : ''}`} />
+                        )}
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={activeView}
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 5 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-[10px] font-bold tracking-small text-white uppercase"
+                            >
+                                {activeView === 'lis' ? 'LIS CAPTIONING' : 'LIVE CAPTIONING'}
+                            </motion.span>
+                        </AnimatePresence>
                     </div>
                     <div className={`px-3 py-0.5 rounded-full bg-white/10 text-[10px] text-gray-300 font-medium transition-opacity duration-300 ${isListening ? 'opacity-100' : 'opacity-0'}`}>
-                        Ascoltando...
+                        {activeView === 'lis' ? 'Catturando i gesti...' : 'Ascoltando...'}
                     </div>
                 </div>
 
                 {/* Occhiali Box - Transizione Immagini e Sovrapposizione Z-Index */}
-                <div className={`w-full flex justify-center px-4 relative z-20 transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${activeView === 'cc' ? 'mt-0 mb-[-90px]' : '-mt-30 -mb-20'}`}>
+                <div className={`w-full flex justify-center px-4 relative z-20 transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${(activeView === 'cc' || activeView === 'lis') ? 'mt-0 mb-[-90px]' : '-mt-30 -mb-20'}`}>
                     <div className="w-full max-w-[500px] flex items-center justify-center text-white/40 relative">
 
-                        {/* Immagine 1: Dashboard Originale (Viene zoomata nativamente) */}
-                        <img
-                            src={glassesImg}
+                        {/* Wrapper Condiviso per Zoom Sincronizzato di Vetro e Video */}
+                        <div
+                            className="w-full relative flex justify-center items-center transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
                             style={{
                                 transformOrigin: '30% 48%',
-                                transform: activeView === 'dashboard' ? 'scale(1) translateY(0) translateX(0)' : 'scale(1.8) translateY(-1.5rem) translateX(2.5rem)'
+                                transform: activeView === 'dashboard' ? 'scale(1) translateY(0) translateX(0)' :
+                                    activeView === 'cc' ? 'scale(1.8) translateY(-1.5rem) translateX(2.5rem)' :
+                                        'scale(2.4) translateY(-1rem) translateX(2.3rem)'
                             }}
-                            className="w-full object-contain drop-shadow-[5px_10px_10px_rgb(0,0,0,0.40)] transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
-                        />
+                        >
+                            <img
+                                src={glassesImg}
+                                className="w-full object-contain relative z-10 drop-shadow-[5px_10px_10px_rgb(0,0,0,0.40)]"
+                            />
+
+                            <div className={`absolute z-20 transition-opacity duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${activeView === 'lis' ? 'opacity-90' : 'opacity-0 pointer-events-none'}`}
+                                style={{
+                                    top: '41.3%',
+                                    left: '5.6%',
+                                    width: '46%',
+                                    aspectRatio: '380 / 205',
+                                    maskImage: `url('${SvgMaskUri}')`,
+                                    WebkitMaskImage: `url('${SvgMaskUri}')`,
+                                    maskSize: '100% 100%',
+                                    WebkitMaskSize: '100% 100%',
+                                    maskRepeat: 'no-repeat',
+                                    WebkitMaskRepeat: 'no-repeat'
+                                }}>
+                                <video
+                                    ref={videoRef}
+                                    src={lisVideo}
+                                    muted
+                                    playsInline
+                                    className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-[1500ms] ease-in-out ${activeView === 'lis' && isListeningLIS ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Overlay LIS - Sfocatura sui bordi del video  */}
+                        <div className={`absolute inset-0 z-[25] pointer-events-none transition-opacity duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${activeView === 'lis' ? 'opacity-100' : 'opacity-0'}`}>
+                            <div className="w-full h-full" style={{ maskImage: 'radial-gradient(circle at 35% 45%, transparent 23%, black 70%)', WebkitMaskImage: 'radial-gradient(circle at 35% 45%, transparent 23%, black 70%)' }}></div>
+                        </div>
 
                         {/* Overlay Lenti Occhiali - Visibile in CC */}
                         <div className={`absolute inset-0 flex justify-between items-center px-[22%] pt-[12%] transition-opacity z-30 ${activeView === 'cc' && isListening ? 'opacity-100 duration-1000' : 'opacity-0 pointer-events-none duration-150'}`}>
 
                             {/* Secondo Interlocutore/i (Basso a Dx lente sx) */}
                             <div className="w-[40%] h-[55%] flex flex-col justify-end items-end overflow-hidden text-right origin-center transition-all duration-1000" style={{ transform: activeView === 'cc' ? 'translateX(5rem) translateY(-3.5rem)' : 'translateX(0)' }}>
-                                {captions.map((cap, i) => cap.name !== 'Luca' && (
-                                    <TypewriterText key={'2nd-' + cap.id + i} orig={cap.orig} trans={cap.trans} render={(_o, t) => (
+                                {captions.map((cap, i) => cap.name !== (activeView === 'lis' ? 'Speaker' : 'Luca') && (
+                                    <TypewriterText key={'other-' + cap.id + i} orig={cap.orig} trans={cap.trans || ''} render={(_o, t) => (
                                         <div className="mb-2 w-full opacity-80" style={{ animation: 'fadeInPlace 0.4s ease-out forwards' }}>
                                             <div className="text-[6px] font-bold mb-[1px]" style={{ color: cap.color }}>{cap.name}</div>
-                                            <div className="text-[8px] text-white leading-tight drop-shadow-md">{t}</div>
+                                            <div className={`text-[8px] text-white leading-tight drop-shadow-md ${!cap.trans ? 'font-medium' : ''}`}>
+                                                {!cap.trans ? _o : t}
+                                            </div>
                                         </div>
                                     )} />
                                 ))}
@@ -196,11 +303,13 @@ export default function Dashboard() {
 
                             {/* Primo interlocutore (Alto a Sx lente sx) */}
                             <div className="w-[40%] h-[55%] flex flex-col justify-end items-start overflow-hidden origin-center transition-all duration-1000" style={{ transform: activeView === 'cc' ? 'translateX(-7.5rem) translateY(-7rem)' : 'translateX(0)' }}>
-                                {captions.map((cap, i) => cap.name === 'Luca' && (
-                                    <TypewriterText key={'1st-' + cap.id + i} orig={cap.orig} trans={cap.trans} render={(_o, t) => (
+                                {captions.map((cap, i) => cap.name === (activeView === 'lis' ? 'Speaker' : 'Luca') && (
+                                    <TypewriterText key={'1st-' + cap.id + i} orig={cap.orig} trans={cap.trans || ''} render={(_o, t) => (
                                         <div className="mb-2 text-left w-full opacity-80" style={{ animation: 'fadeInPlace 0.4s ease-out forwards' }}>
                                             <div className="text-[6px] font-bold mb-[1px]" style={{ color: cap.color }}>{cap.name}</div>
-                                            <div className="text-[8px] text-white leading-tight drop-shadow-md">{t}</div>
+                                            <div className={`text-[8px] text-white leading-tight drop-shadow-md ${!cap.trans ? 'font-medium' : ''}`}>
+                                                {!cap.trans ? _o : t}
+                                            </div>
                                         </div>
                                     )} />
                                 ))}
@@ -210,7 +319,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className={`transition-all duration-[800ms] flex flex-col items-center ${activeView === 'cc' ? 'opacity-0 scale-90 h-0 overflow-hidden mb-0' : 'opacity-100 scale-100 mb-10'}`}>
+                <div className={`transition-all duration-[800ms] flex flex-col items-center ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-0 scale-90 h-0 overflow-hidden mb-0' : 'opacity-100 scale-100 mb-10'}`}>
                     <h1 className="text-[32px] font-semibold tracking-tight leading-tight mb-2">XRAI Glass</h1>
                     <div className="flex items-center space-x-2 text-sm text-gray-200">
                         {isOffline ? <Battery className="w-5 h-5 text-white" /> : <BatteryFull className="w-5 h-5 text-white" />}
@@ -341,7 +450,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* ------------- VISTA 2: LIVE CAPTIONING ------------- */}
-                <div className={`col-start-1 row-start-1 px-5 flex flex-col transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${activeView === 'cc' ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-[200px] pointer-events-none invisible'}`}>
+                <div className={`col-start-1 row-start-1 px-5 flex flex-col transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-[200px] pointer-events-none invisible'}`}>
                     <div className="bg-[#242424] rounded-[24px] p-6 shadow-2xl border border-white/5 h-[420px] pt-14 -mt-10 flex flex-col justify-end overflow-hidden relative z-10 font-sans">
 
                         {/* Background empty text */}
@@ -353,17 +462,21 @@ export default function Dashboard() {
                                         <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                                         <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                                     </div>
-                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-500">In Ascolto</span>
+                                    <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-500">
+                                        {activeView === 'lis' ? 'In Osservazione' : 'In Ascolto'}
+                                    </span>
                                 </div>
                             ) : (
-                                <span className="text-sm">Premi play per avviare la trascrizione</span>
+                                <span className="text-sm">
+                                    {activeView === 'lis' ? 'Premi play per avviare l\'interprete LIS' : 'Premi play per avviare la trascrizione'}
+                                </span>
                             )}
                         </div>
 
                         {/* Chat Bubbles Container */}
                         <div className="w-full flex-1 overflow-y-auto space-y-4 pb-4 flex flex-col justify-end relative z-10 transition-opacity">
                             {captions.map((cap, i) => (
-                                <TypewriterText key={'chat-' + cap.id + i} orig={cap.orig} trans={cap.trans} render={(o, t) => (
+                                <TypewriterText key={'chat-' + cap.id + i} orig={cap.orig} trans={cap.trans || ''} render={(o, t) => (
                                     <div className="flex space-x-3 w-full translate-y-2 opacity-0" style={{ animation: 'fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards' }}>
                                         <div className="w-9 h-9 rounded-full border border-gray-600 flex items-center justify-center shrink-0">
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -373,8 +486,14 @@ export default function Dashboard() {
                                                 <div className="text-[12px] font-bold" style={{ color: cap.color }}>{cap.name}</div>
                                                 {cap.time && <div className="text-[10px] text-gray-500 font-medium">{cap.time}</div>}
                                             </div>
-                                            <div className="text-[13px] text-gray-300 leading-snug">{o}</div>
-                                            <div className="text-[14px] text-white font-bold leading-snug mt-1">{t}</div>
+                                            {!cap.trans ? (
+                                                <div className="text-[14px] text-white font-bold leading-snug mt-1">{o}</div>
+                                            ) : (
+                                                <>
+                                                    <div className="text-[13px] text-gray-300 leading-snug">{o}</div>
+                                                    <div className="text-[14px] text-white font-bold leading-snug mt-1">{t}</div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 )} />

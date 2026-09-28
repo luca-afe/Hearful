@@ -2,8 +2,8 @@ import { Glasses, Type, Hand, Radio, Clock, ClosedCaption } from 'lucide-react';
 
 interface BottomNavProps {
     isOffline?: boolean;
-    activeView?: 'dashboard' | 'cc';
-    onNavigate?: (view: 'dashboard' | 'cc') => void;
+    activeView?: 'dashboard' | 'cc' | 'lis';
+    onNavigate?: (view: 'dashboard' | 'cc' | 'lis') => void;
 }
 
 export default function BottomNav({ isOffline = false, activeView = 'dashboard', onNavigate }: BottomNavProps) {
@@ -31,8 +31,11 @@ export default function BottomNav({ isOffline = false, activeView = 'dashboard',
                 </button>
 
                 {/* 3. LIS */}
-                <button className={`group transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-center shrink-0 overflow-hidden ${isOffline ? 'w-0 opacity-0 scale-50 pointer-events-none' : 'w-11 opacity-100 scale-100'}`}>
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-500 bg-transparent text-gray-400 group-hover:text-white">
+                <button
+                    onClick={() => onNavigate?.('lis')}
+                    className={`group transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-center shrink-0 overflow-hidden ${isOffline ? 'w-0 opacity-0 scale-50 pointer-events-none' : 'w-11 opacity-100 scale-100'}`}
+                >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-colors duration-500 ${activeView === 'lis' ? 'bg-[#0095FF] text-white' : 'bg-transparent text-gray-400 group-hover:text-white'}`}>
                         <Hand className="w-6 h-6 shrink-0" />
                     </div>
                 </button>
