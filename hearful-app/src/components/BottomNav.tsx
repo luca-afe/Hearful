@@ -1,4 +1,4 @@
-import { Glasses, Type, Hand, Radio, Clock, ClosedCaption } from 'lucide-react';
+import { Glasses, Hand, Radio, Clock, ClosedCaption } from 'lucide-react';
 
 interface BottomNavProps {
     isOffline?: boolean;

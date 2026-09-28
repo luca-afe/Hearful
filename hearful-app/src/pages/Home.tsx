@@ -1,9 +1,10 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import bgImage from '../assets/bg-home.png';
 import occhialiVideo from '../assets/ARglasses1.mp4';
 import { motion } from 'framer-motion';
 
 export default function Home() {
+    const navigate = useNavigate();
     return (
         <motion.div
             initial={{ y: '-100%', zIndex: 100 }}
@@ -71,6 +72,7 @@ export default function Home() {
                 {/* Pulsanti */}
                 <div className="space-y-4 w-full">
                     <button
+                        onClick={() => navigate('/devices')}
                         className="w-full py-2 rounded-full text-white font-medium text-lg leading-none hover:brightness-110 active:scale-95 transition-all"
                         style={{
                             background: 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 40%)',

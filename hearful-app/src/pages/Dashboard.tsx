@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park, Play, Square, AudioLines, BatteryCharging, BatteryWarning, Battery, CircleQuestionMark } from 'lucide-react';
+import { Power, MoreHorizontal, BatteryFull, Globe, BuildingComplex, Park, Play, Square, AudioLines, Battery, CircleQuestionMark } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import bgImage from '../assets/bg-dashboard.png';
 import glassesImg from '../assets/glasses-dash.png';
 import lisVideo from '../assets/LISimulation.mp4';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const SvgMaskUri = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg width="380" height="211" viewBox="0 0 380 211" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.2247 44.3321L9.1623 42.6337C3.67748 38.1167 0.5 31.3837 0.5 24.2784C0.5 11.1459 11.146 0.5 24.2784 0.5H32.5H70.5H99.5H146H187.5H226.5H265H298H307.884C316.441 0.5 324.166 5.62005 327.5 13.5L333.106 28.9997C335.02 34.2918 337.877 39.2343 341.496 43.5434C344.795 47.4708 348.732 50.8638 353.108 53.5384L361.69 58.7825C363.527 59.9057 365.64 60.5 367.794 60.5H374C377.038 60.5 379.5 62.9624 379.5 66C379.5 69.0376 377.038 71.5 374 71.5H365.044C362.086 71.5 359.199 72.4076 356.773 74.1002L348.063 80.1769C342.098 84.3384 337.152 89.7948 333.593 96.138L330.937 100.874C328.651 104.948 326.768 109.236 325.313 113.675L318 136L311.565 157.576C310.192 162.181 308.379 166.644 306.153 170.903L305.917 171.355C300.709 181.317 293.27 189.94 284.18 196.551C271.714 205.617 256.698 210.5 241.285 210.5H226.5H187.5H146L117.883 207.779C105.764 206.606 94.0297 202.888 83.4472 196.866L81.8748 195.972C74.347 191.689 67.607 186.15 61.9461 179.595C55.0574 171.619 49.9036 162.297 46.8122 152.221L38 123.5L34.3039 101.995C33.1036 95.0116 31.3016 88.1445 28.9182 81.471L20.2342 57.1558C18.4449 52.1457 15.3314 47.7141 11.2247 44.3321Z" fill="black"/></svg>`)}`;
 import { motion, AnimatePresence } from 'framer-motion';

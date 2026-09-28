@@ -1,15 +1,17 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Home from './pages/Home';
-import Dashboard from './pages/Dashboard.tsx';
+import Devices from './pages/Devices';
+import Dashboard from './pages/Dashboard';
 
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
+        <Route path="/devices" element={<Devices />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </AnimatePresence>
