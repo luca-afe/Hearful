@@ -130,7 +130,7 @@ export default function Devices() {
                         />
                         <button
                             onClick={() => setIsBluetoothOn(!isBluetoothOn)}
-                            className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-300 cursor-pointer ${isBluetoothOn ? 'bg-[#5A5A5E] justify-end' : 'bg-[#3A3A3C] justify-start'
+                            className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-300 cursor-pointer ${isBluetoothOn ? 'bg-[#0095FF] justify-end' : 'bg-[#3A3A3C] justify-start'
                                 }`}
                             aria-label="Toggle Bluetooth"
                         >
