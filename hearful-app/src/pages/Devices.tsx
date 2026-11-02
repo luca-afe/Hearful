@@ -92,13 +92,7 @@ export default function Devices() {
 
                 {/* Right actions */}
                 <div className="flex items-center space-x-3">
-                    <button
-                        onClick={() => setIsPowerConfirmOpen(true)}
-                        aria-label="Spegni"
-                        className="p-2 -mr-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                    >
-                        <Power className="w-5 h-5" strokeWidth={2} />
-                    </button>
+
                     <button
                         aria-label="Altre opzioni"
                         className="p-2 -mr-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
