@@ -152,37 +152,52 @@ export default function Devices() {
                                     className={`py-4 transition-all duration-300 relative group ${index !== mockDevices.length - 1 ? 'border-b border-white/10' : ''
                                         } ${isOnline && device.type === 'glasses' ? 'cursor-pointer hover:bg-white/[0.03] -mx-3 px-3 rounded-2xl' : ''}`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        {/* Left info */}
-                                        <div className="flex flex-col justify-between self-stretch pr-2 min-w-[120px]">
+                                    <div className="flex items-center justify-between gap-2">
+                                        {/* Left: name + owner + battery row + status */}
+                                        <div className="flex flex-col justify-between self-stretch flex-1 min-w-0">
                                             <div>
-                                                <h3 className="text-[17px] font-bold text-white tracking-tight leading-snug">
+                                                <h3 className="text-[17px] font-bold text-white tracking-tight leading-snug truncate">
                                                     {device.name}
                                                 </h3>
-                                                <p className="text-[12px] text-gray-400 font-normal leading-tight mt-0.5">
+                                                <p className="text-[12px] text-gray-400 font-normal leading-tight mt-0.5 truncate">
                                                     {device.owner}
                                                 </p>
                                             </div>
 
-                                            {/* Battery */}
-                                            <div className="flex items-center space-x-2 pt-5">
-                                                <div className="relative flex items-center text-white/90">
-                                                    <Battery className="w-6 h-4" strokeWidth={1.75} />
-                                                    <div
-                                                        className="absolute left-[3px] top-[4px] bottom-[4px] bg-white rounded-xs"
-                                                        style={{ width: `${(device.battery / 100) * 12}px` }}
-                                                    />
+                                            {/* Battery + Status on same row */}
+                                            <div className="flex items-center gap-2 pt-5 flex-wrap">
+                                                <div className="flex items-center space-x-1.5">
+                                                    <div className="relative flex items-center text-white/90">
+                                                        <Battery className="w-6 h-4" strokeWidth={1.75} />
+                                                        <div
+                                                            className="absolute left-[3px] top-[4px] bottom-[4px] bg-white rounded-xs"
+                                                            style={{ width: `${(device.battery / 100) * 12}px` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[11px] font-medium text-white/90">
+                                                        {device.battery}%
+                                                    </span>
                                                 </div>
-                                                <span className="text-[11px] font-medium text-white/90">
-                                                    {device.battery}%
-                                                </span>
+
+                                                {/* Status badge */}
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[11px] text-gray-400 font-light">Stato:</span>
+                                                    <span
+                                                        className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full tracking-wider transition-colors duration-300 whitespace-nowrap ${isOnline
+                                                            ? 'bg-white text-black shadow-sm'
+                                                            : 'bg-[#2A2A2A] text-gray-400 border border-white/5'
+                                                            }`}
+                                                    >
+                                                        {isOnline ? 'ONLINE' : 'OFFLINE'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Center/Right Device Image Placeholder */}
-                                        <div className="flex-1 flex justify-center items-center py-1 px-2">
+                                        {/* Right: Device Image */}
+                                        <div className="flex-shrink-0 flex justify-center items-center py-1">
                                             {device.type === 'glasses' ? (
-                                                <div className="relative w-28 h-16 flex items-center justify-center">
+                                                <div className="relative w-24 h-14 flex items-center justify-center">
                                                     <img
                                                         src={glassesImg}
                                                         alt={device.name}
@@ -190,51 +205,23 @@ export default function Devices() {
                                                     />
                                                 </div>
                                             ) : (
-                                                /* Apple Watch stylized SVG placeholder */
-                                                <div className="relative w-24 h-20 flex items-center justify-center">
-                                                    <svg width="68" height="74" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]">
-                                                        {/* Top Strap (Blue ocean texture) */}
+                                                <div className="relative w-20 h-18 flex items-center justify-center">
+                                                    <svg width="60" height="66" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)]">
                                                         <rect x="30" y="2" width="40" height="22" rx="6" fill="#1C3F75" />
                                                         <line x1="33" y1="8" x2="67" y2="8" stroke="#25529A" strokeWidth="2.5" strokeLinecap="round" />
                                                         <line x1="33" y1="14" x2="67" y2="14" stroke="#25529A" strokeWidth="2.5" strokeLinecap="round" />
-
-                                                        {/* Bottom Strap */}
                                                         <rect x="30" y="86" width="40" height="22" rx="6" fill="#1C3F75" />
                                                         <line x1="33" y1="94" x2="67" y2="94" stroke="#25529A" strokeWidth="2.5" strokeLinecap="round" />
                                                         <line x1="33" y1="100" x2="67" y2="100" stroke="#25529A" strokeWidth="2.5" strokeLinecap="round" />
-
-                                                        {/* Watch Case (Titanium / Silver border) */}
                                                         <rect x="18" y="20" width="64" height="70" rx="18" fill="#B3B9C4" />
                                                         <rect x="20" y="22" width="60" height="66" rx="16" fill="#2E333B" />
-
-                                                        {/* Inner Screen */}
                                                         <rect x="24" y="26" width="52" height="58" rx="12" fill="#0C0D10" />
-
-                                                        {/* Screen Reflection Curve */}
                                                         <path d="M26 36C26 30 32 28 38 28H62C68 28 72 32 72 38C56 46 38 60 26 74V36Z" fill="white" fillOpacity="0.06" />
-
-                                                        {/* Digital Crown on Right */}
                                                         <rect x="82" y="38" width="4" height="15" rx="2" fill="#E2E8F0" />
-                                                        {/* Action button */}
                                                         <rect x="82" y="60" width="3" height="12" rx="1.5" fill="#94A3B8" />
                                                     </svg>
                                                 </div>
                                             )}
-                                        </div>
-
-                                        {/* Right Status */}
-                                        <div className="flex items-center self-end pb-0.5 pl-1">
-                                            <span className="text-[12px] text-gray-400 font-light mr-1.5">
-                                                Stato:
-                                            </span>
-                                            <span
-                                                className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full tracking-wider transition-colors duration-300 ${isOnline
-                                                    ? 'bg-white text-black shadow-sm'
-                                                    : 'bg-[#2A2A2A] text-gray-400 border border-white/5'
-                                                    }`}
-                                            >
-                                                {isOnline ? 'ONLINE' : 'OFFLINE'}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
