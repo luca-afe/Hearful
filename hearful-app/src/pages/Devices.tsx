@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Power, MoreHorizontal, Bluetooth, Battery, PowerOff } from 'lucide-react';
+import { ArrowLeft, Power, MoreHorizontal, Bluetooth, Battery } from 'lucide-react';
 import bgDevices from '../assets/bg-devices.png';
 import glassesImg from '../assets/glasses-dash.png';
 

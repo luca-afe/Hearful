@@ -4,7 +4,9 @@ import BottomNav from '../components/BottomNav';
 import bgImage from '../assets/bg-dashboard.png';
 import glassesImg from '../assets/glasses-dash.png';
 import lisVideo from '../assets/LISimulation.mp4';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDevice } from '../context/DeviceContext';
+import PowerConfirmModal from '../components/PowerConfirmModal';
 
 const SvgMaskUri = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg width="380" height="211" viewBox="0 0 380 211" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.2247 44.3321L9.1623 42.6337C3.67748 38.1167 0.5 31.3837 0.5 24.2784C0.5 11.1459 11.146 0.5 24.2784 0.5H32.5H70.5H99.5H146H187.5H226.5H265H298H307.884C316.441 0.5 324.166 5.62005 327.5 13.5L333.106 28.9997C335.02 34.2918 337.877 39.2343 341.496 43.5434C344.795 47.4708 348.732 50.8638 353.108 53.5384L361.69 58.7825C363.527 59.9057 365.64 60.5 367.794 60.5H374C377.038 60.5 379.5 62.9624 379.5 66C379.5 69.0376 377.038 71.5 374 71.5H365.044C362.086 71.5 359.199 72.4076 356.773 74.1002L348.063 80.1769C342.098 84.3384 337.152 89.7948 333.593 96.138L330.937 100.874C328.651 104.948 326.768 109.236 325.313 113.675L318 136L311.565 157.576C310.192 162.181 308.379 166.644 306.153 170.903L305.917 171.355C300.709 181.317 293.27 189.94 284.18 196.551C271.714 205.617 256.698 210.5 241.285 210.5H226.5H187.5H146L117.883 207.779C105.764 206.606 94.0297 202.888 83.4472 196.866L81.8748 195.972C74.347 191.689 67.607 186.15 61.9461 179.595C55.0574 171.619 49.9036 162.297 46.8122 152.221L38 123.5L34.3039 101.995C33.1036 95.0116 31.3016 88.1445 28.9182 81.471L20.2342 57.1558C18.4449 52.1457 15.3314 47.7141 11.2247 44.3321Z" fill="black"/></svg>`)}`;
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,12 +47,44 @@ function TypewriterText({ orig, trans, render }: { orig: string, trans: string, 
 }
 
 export default function Dashboard() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const initialView = (location.state as any)?.view;
+    const isFromTab = Boolean((location.state as any)?.fromTab || (location.state as any)?.triggerShutdownAnimation || initialView);
     const [envMode, setEnvMode] = useState('Urbano');
     const [subSize, setSubSize] = useState(45);
     const [showOverlay, setShowOverlay] = useState(false);
     const [isPowerConfirmOpen, setIsPowerConfirmOpen] = useState(false);
-    const [isOffline, setIsOffline] = useState(false);
-    const [activeView, setActiveView] = useState<'dashboard' | 'cc' | 'lis'>('dashboard');
+    const { isOffline, setIsOffline } = useDevice();
+    const [animatingOffline, setAnimatingOffline] = useState(isOffline);
+    const [activeView, setActiveView] = useState<'dashboard' | 'cc' | 'lis'>(
+        (initialView === 'cc' || initialView === 'lis') ? initialView : 'dashboard'
+    );
+
+    useEffect(() => {
+        if ((location.state as any)?.triggerShutdownAnimation) {
+            // Started shutdown from another page (Radar, History, Devices)
+            setIsPowerConfirmOpen(true);
+            setAnimatingOffline(false);
+            setActiveView('dashboard');
+            setIsListeningCC(false);
+            setIsListeningLIS(false);
+            setCaptionsCC([]);
+            setCaptionsLIS([]);
+
+            window.history.replaceState({}, document.title);
+
+            const timer = setTimeout(() => {
+                setIsPowerConfirmOpen(false);
+                setIsOffline(true);
+                setAnimatingOffline(true);
+            }, 60);
+
+            return () => clearTimeout(timer);
+        } else {
+            setAnimatingOffline(isOffline);
+        }
+    }, [location.state, isOffline, setIsOffline]);
 
     // Captioning specific states
     const [isListeningCC, setIsListeningCC] = useState(false);
@@ -144,19 +178,23 @@ export default function Dashboard() {
     };
 
     const handlePowerClick = () => {
-        if (isOffline) {
+        if (animatingOffline || isOffline) {
             setIsOffline(false); // Riaccende
-        } else if (isPowerConfirmOpen) {
-            setIsOffline(true); // Spegne
-            setIsPowerConfirmOpen(false);
-            setActiveView('dashboard'); // Torna alla dashboard
-            setIsListeningCC(false);
-            setIsListeningLIS(false);
-            setCaptionsCC([]);
-            setCaptionsLIS([]);
+            setAnimatingOffline(false);
         } else {
             setIsPowerConfirmOpen(true); // Mostra avviso
         }
+    };
+
+    const handleConfirmShutdown = () => {
+        setIsOffline(true); // Spegne
+        setAnimatingOffline(true);
+        setIsPowerConfirmOpen(false);
+        setActiveView('dashboard'); // Torna alla dashboard
+        setIsListeningCC(false);
+        setIsListeningLIS(false);
+        setCaptionsCC([]);
+        setCaptionsLIS([]);
     };
 
     const toggleSwitch = (key: keyof typeof toggles) => {
@@ -165,8 +203,8 @@ export default function Dashboard() {
 
     return (
         <motion.div
-            initial={{ y: '-100%', zIndex: 100 }}
-            animate={{ y: 0, zIndex: 100 }}
+            initial={isFromTab ? { opacity: 0 } : { y: '-100%', zIndex: 100 }}
+            animate={{ y: 0, opacity: 1, zIndex: 100 }}
             exit={{ y: '20%', opacity: 0, zIndex: 10 }}
             transition={{ type: 'spring', stiffness: 280, damping: 30 }}
             className="absolute inset-0 min-h-screen bg-cover bg-center flex flex-col font-sans overflow-y-auto overflow-x-hidden bg-gradient-to-br from-[#02184B] to-[#010D27]"
@@ -188,13 +226,13 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={handlePowerClick}
-                        className={`relative z-50 p-2 -mr-2 rounded-full transition-all ${isPowerConfirmOpen ? 'bg-red-500/20 text-red-500' :
-                            isOffline ? 'text-red-500 hover:bg-gray-800' : 'text-gray-300 hover:bg-gray-800'
+                        className={`relative z-50 p-2 -mr-2 rounded-full transition-all cursor-pointer ${isPowerConfirmOpen ? 'bg-red-500/20 text-red-500' :
+                            animatingOffline ? 'text-red-500 hover:bg-gray-800' : 'text-gray-300 hover:bg-gray-800'
                             }`}
                     >
                         <Power className="w-5 h-5" strokeWidth={2} />
                     </button>
-                    <button className="relative z-50 p-2 -mr-2 text-gray-300 hover:bg-gray-800 rounded-full transition-colors">
+                    <button className="relative z-50 p-2 -mr-2 text-gray-300 hover:bg-gray-800 rounded-full transition-colors cursor-pointer">
                         <MoreHorizontal className="w-6 h-6" strokeWidth={2} />
                     </button>
                 </div>
@@ -205,9 +243,9 @@ export default function Dashboard() {
 
                 {/* Indicatore Stato Dashboard */}
                 <div className={`flex items-center space-x-1.5 mb-10 transition-all duration-300 ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-0 scale-90 absolute top-2' : 'opacity-100 scale-100 relative'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${isOffline ? 'bg-red-500 text-red-500 animate-pulse' : 'bg-green-500 text-green-500 animate-pulse'}`} />
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${isOffline ? 'text-red-400' : 'text-white'}`}>
-                        {isOffline ? 'Non connesso' : 'Connesso'}
+                    <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${animatingOffline ? 'bg-red-500 text-red-500 animate-pulse' : 'bg-green-500 text-green-500 animate-pulse'}`} />
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${animatingOffline ? 'text-red-400' : 'text-white'}`}>
+                        {animatingOffline ? 'Non connesso' : 'Connesso'}
                     </span>
                 </div>
 
@@ -322,10 +360,10 @@ export default function Dashboard() {
                 <div className={`transition-all duration-[800ms] flex flex-col items-center ${(activeView === 'cc' || activeView === 'lis') ? 'opacity-0 scale-90 h-0 overflow-hidden mb-0' : 'opacity-100 scale-100 mb-10'}`}>
                     <h1 className="text-[32px] font-semibold tracking-tight leading-tight mb-2">XRAI Glass</h1>
                     <div className="flex items-center space-x-2 text-sm text-gray-200">
-                        {isOffline ? <Battery className="w-5 h-5 text-white" /> : <BatteryFull className="w-5 h-5 text-white" />}
-                        <span className="font-medium text-[13px]">{isOffline ? <CircleQuestionMark size={16} /> : "100%"}</span>
+                        {animatingOffline ? <Battery className="w-5 h-5 text-white" /> : <BatteryFull className="w-5 h-5 text-white" />}
+                        <span className="font-medium text-[13px]">{animatingOffline ? <CircleQuestionMark size={16} /> : "100%"}</span>
                     </div>
-                    <span className="text-[11px] font-medium tracking-wide mt-1 text-gray-400">{isOffline ? "OFFLINE" : "AAC"}</span>
+                    <span className="text-[11px] font-medium tracking-wide mt-1 text-gray-400">{animatingOffline ? "OFFLINE" : "AAC"}</span>
                 </div>
             </div>
 
@@ -348,26 +386,26 @@ export default function Dashboard() {
 
                             {/* 1. Casa */}
                             <button onClick={() => setEnvMode('Casa')} className="flex flex-col items-center space-y-2 group hover:opacity-80 transition-opacity">
-                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Casa' && !isOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={envMode === 'Casa' && !isOffline ? 2 : 1.5} className={`transition-colors duration-500 ${envMode === 'Casa' && !isOffline ? 'text-white' : 'text-[#979797ea]'}`}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Casa' && !animatingOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={envMode === 'Casa' && !animatingOffline ? 2 : 1.5} className={`transition-colors duration-500 ${envMode === 'Casa' && !animatingOffline ? 'text-white' : 'text-[#979797ea]'}`}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                                 </div>
-                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Casa' && !isOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Casa</span>
+                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Casa' && !animatingOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Casa</span>
                             </button>
 
                             {/* 2. Aperto */}
                             <button onClick={() => setEnvMode('Aperto')} className="flex flex-col items-center space-y-2 group hover:opacity-80 transition-opacity">
-                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Aperto' && !isOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
-                                    <Park color={envMode === 'Aperto' && !isOffline ? 'white' : '#979797ea'} strokeWidth={envMode === 'Aperto' && !isOffline ? 2 : 1.5} className="transition-colors duration-500"></Park>
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Aperto' && !animatingOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
+                                    <Park color={envMode === 'Aperto' && !animatingOffline ? 'white' : '#979797ea'} strokeWidth={envMode === 'Aperto' && !animatingOffline ? 2 : 1.5} className="transition-colors duration-500"></Park>
                                 </div>
-                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Aperto' && !isOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Aperto</span>
+                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Aperto' && !animatingOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Aperto</span>
                             </button>
 
                             {/* 3. Urbano */}
                             <button onClick={() => setEnvMode('Urbano')} className="flex flex-col items-center space-y-2 group hover:opacity-80 transition-opacity">
-                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Urbano' && !isOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
-                                    <BuildingComplex color={envMode === 'Urbano' && !isOffline ? 'white' : '#979797ea'} strokeWidth={envMode === 'Urbano' && !isOffline ? 2 : 1.5} className="transition-colors duration-500"></BuildingComplex>
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 ${envMode === 'Urbano' && !animatingOffline ? 'bg-[#0095FF] shadow-[0_4px_12px_rgba(0,149,255,0.4)] border-transparent' : 'border border-gray-500 bg-[#242424]'}`}>
+                                    <BuildingComplex color={envMode === 'Urbano' && !animatingOffline ? 'white' : '#979797ea'} strokeWidth={envMode === 'Urbano' && !animatingOffline ? 2 : 1.5} className="transition-colors duration-500"></BuildingComplex>
                                 </div>
-                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Urbano' && !isOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Urbano</span>
+                                <span className={`text-[11px] transition-colors duration-500 ${envMode === 'Urbano' && !animatingOffline ? 'font-medium text-white' : 'text-gray-400'}`}>Urbano</span>
                             </button>
                         </div>
                     </div>
@@ -384,7 +422,7 @@ export default function Dashboard() {
                             {/* Slider Custom */}
                             <div className="flex-1 relative h-6 flex items-center">
                                 <div className="absolute left-0 right-0 h-1.5 bg-[#404040] rounded-full pointer-events-none" />
-                                <div className={`absolute left-0 h-1.5 ${isOffline ? 'bg-[#5b5b5b]' : 'bg-[#0095FF]'} rounded-full pointer-events-none`} style={{ width: `${subSize}%` }} />
+                                <div className={`absolute left-0 h-1.5 ${animatingOffline ? 'bg-[#5b5b5b]' : 'bg-[#0095FF]'} rounded-full pointer-events-none`} style={{ width: `${subSize}%` }} />
 
                                 <input
                                     type="range"
@@ -406,10 +444,10 @@ export default function Dashboard() {
 
                     {/* Pulsante Funzionalità AR */}
                     <div
-                        className={`w-full py-4 rounded-[16px] text-white font-medium text-[15px] text-center tracking-wide transition-all duration-500 ${isOffline ? 'shadow-none text-gray-300' : 'shadow-[0_0_20px_rgba(0,153,255,0.4)]'
+                        className={`w-full py-4 rounded-[16px] text-white font-medium text-[15px] text-center tracking-wide transition-all duration-500 ${animatingOffline ? 'shadow-none text-gray-300' : 'shadow-[0_0_20px_rgba(0,153,255,0.4)]'
                             }`}
                         style={{
-                            background: isOffline
+                            background: animatingOffline
                                 ? 'radial-gradient(circle at center bottom, rgb(156 163 175) 0%, rgb(75 85 99) 50%)'
                                 : 'radial-gradient(circle at center bottom, rgb(216 239 255) 0%, rgb(0 146 255) 30%)'
                         }}
@@ -421,28 +459,31 @@ export default function Dashboard() {
                     <div className="grid grid-cols-2 gap-3 pb-8">
                         <button onClick={() => toggleSwitch('parlato')} className="bg-[#2A2A2A] rounded-[16px] p-3 flex items-center justify-between border border-white/5 shadow-sm text-left w-full">
                             <span className="text-[11px] leading-tight font-medium text-gray-300">Trascrizione<br />Parlato</span>
-                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.parlato && !isOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
+                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.parlato && !animatingOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full shadow-sm" />
                             </div>
                         </button>
 
                         <button onClick={() => toggleSwitch('lis')} className="bg-[#2A2A2A] rounded-[16px] p-3 flex items-center justify-between border border-white/5 shadow-sm text-left w-full">
                             <span className="text-[11px] leading-tight font-medium text-gray-300">Trascrizione<br />LIS</span>
-                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.lis && !isOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
+                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.lis && !animatingOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full shadow-sm" />
                             </div>
                         </button>
 
-                        <button onClick={() => toggleSwitch('radar')} className="bg-[#2A2A2A] rounded-[16px] p-3 flex items-center justify-between border border-white/5 shadow-sm text-left w-full">
+                        <button
+                            onClick={() => navigate('/radar', { state: { fromTab: true } })}
+                            className="bg-[#2A2A2A] rounded-[16px] p-3 flex items-center justify-between border border-white/5 shadow-sm text-left w-full cursor-pointer hover:bg-white/[0.04] transition-all"
+                        >
                             <span className="text-[11px] leading-tight font-medium text-gray-300">Radar Suoni<br />Ambientali</span>
-                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.radar && !isOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
+                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.radar && !animatingOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full shadow-sm" />
                             </div>
                         </button>
 
                         <button onClick={() => toggleSwitch('registra')} className="bg-[#2A2A2A] rounded-[16px] p-3 flex items-center justify-between border border-white/5 shadow-sm text-left w-full">
                             <span className="text-[11px] leading-tight font-medium text-gray-300">Registra<br />Trascrizioni</span>
-                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.registra && !isOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
+                            <div className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors duration-500 ${toggles.registra && !animatingOffline ? 'bg-[#0095FF] justify-end' : 'bg-[#4B4B4B] justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full shadow-sm" />
                             </div>
                         </button>
@@ -524,9 +565,17 @@ export default function Dashboard() {
 
             {/* Navbar fluttuante */}
             <BottomNav
-                isOffline={isOffline}
+                isOffline={animatingOffline}
                 activeView={activeView}
-                onNavigate={(view) => setActiveView(view)}
+                onNavigate={(view) => {
+                    if (view === 'radar') {
+                        navigate('/radar', { state: { fromTab: true } });
+                    } else if (view === 'history') {
+                        navigate('/history', { state: { fromTab: true } });
+                    } else if (view === 'dashboard' || view === 'cc' || view === 'lis') {
+                        setActiveView(view);
+                    }
+                }}
             />
 
             {/* Overlay Dimensione Font in Tempo Reale */}
@@ -545,33 +594,16 @@ export default function Dashboard() {
 
             {/* Global Offline Overlay */}
             <div
-                className={`fixed inset-0 z-[55] bg-black/20 transition-all duration-700 ease-out ${isOffline ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 z-[55] bg-black/20 transition-all duration-700 ease-out ${animatingOffline ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none'
                     }`}
             />
 
-            {/* Spegnimento Overlay (Conferma Accessibilità) */}
-            <div
-                className={`fixed inset-0 z-[100] backdrop-blur-md transition-all duration-700 ease-out flex flex-col items-center justify-center p-6 ${isPowerConfirmOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                    }`}
-                onClick={() => setIsPowerConfirmOpen(false)}
-            >
-                {/* Preveniamo che cliccare sul modal lo chiuda */}
-                <div className="bg-[#242424] p-8 rounded-[32px] w-full max-w-sm text-center shadow-2xl" onClick={e => e.stopPropagation()}>
-                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
-                        <Power className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-white text-xl font-bold mb-3">Spegnimento</h3>
-                    <p className="text-gray-300 text-[15px] font-light leading-relaxed mb-8">
-                        Attenzione, tutte le funzionalità AR verranno disattivate e il dispositivo si spegnerà.
-                    </p>
-                    <button
-                        onClick={handlePowerClick}
-                        className="w-full py-4 rounded-full bg-red-500 text-white font-medium text-lg hover:bg-red-600 active:scale-95 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
-                    >
-                        Conferma Spegnimento
-                    </button>
-                </div>
-            </div>
+            {/* Spegnimento Modal Condiviso */}
+            <PowerConfirmModal
+                isOpen={isPowerConfirmOpen}
+                onClose={() => setIsPowerConfirmOpen(false)}
+                onConfirm={handleConfirmShutdown}
+            />
         </motion.div>
     );
 }
