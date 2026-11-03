@@ -1,6 +1,6 @@
-# 🦻 Hearful — AR Smart Glasses Companion
+# 🦻 Hearful
 
-> **Progetto accademico per il corso di Interazione Uomo-Macchina (HCI)**  
+> **Progetto universitario per il corso di Interazione Uomo-Macchina (HCI)**  
 > *Autonomia, accessibilità e consapevolezza ambientale per la comunità sorda attraverso la Realtà Aumentata.*
 
 ---
